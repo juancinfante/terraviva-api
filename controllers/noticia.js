@@ -4,7 +4,7 @@ const pagination = async (req, res) => {
     const prov = req.params.prov;
     const limit = req.params.limit || 10;
     const page = req.params.page || 1;
-    const resp = await noticiaModel.paginate({provincia: prov}, {limit: limit, page: page})
+    const resp = await noticiaModel.paginate({provincia: prov}, {limit: limit, page: page, sort: { _id: -1 }})
     res.json(resp);
 }
 
@@ -34,7 +34,7 @@ const obtenerNoticias = async (req, res) => {
     const page = req.params.page || 1;
     try {
         try {
-            const noticias = await noticiaModel.paginate({}, {limit, page});
+            const noticias = await noticiaModel.paginate({}, {limit, page, sort: { _id: -1 } });
             res.status(200).json({
                 noticias
             })
@@ -72,7 +72,7 @@ const obtenerNoticiaPorPalabra = async (req, res) => {
                 { descripcion: { $regex: req.params.palabra, $options: 'i' } },
                 { texto: { $regex: req.params.palabra, $options: 'i' } }
             ]
-        }, {limit: limit, page: page});
+        }, {limit: limit, page: page, sort: { _id: -1 }});
         res.status(200).json({
             noticia
         });

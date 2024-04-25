@@ -22,6 +22,14 @@ const eventoModel = Schema({
         type: String,
         required: true
     },
+    direccion: {
+        type: String,
+        required: true
+    },
+    horario: {
+        type: String,
+        required: true
+    },
     created_at:{
         type: Date,
         default: Date.now()
