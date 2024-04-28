@@ -41,8 +41,7 @@ const obtenerEventos = async (req, res) => {
                 msg: error
             })
         }
-    } catch (error) {
-        
+    } catch (error) { 
     }
 }
 
