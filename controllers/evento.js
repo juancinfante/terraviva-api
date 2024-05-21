@@ -23,7 +23,7 @@ const paginationEventos = async (req, res) => {
     const prov = req.params.prov;
     const limit = req.params.limit || 10;
     const page = req.params.page || 1;
-    const resp = await eventoModel.paginate({provincia: prov}, {limit: limit, page: page})
+    const resp = await eventoModel.paginate({provincia: prov}, {limit: limit, page: page,sort: { _id: -1 }})
     res.json(resp);
 }
 
@@ -32,7 +32,7 @@ const obtenerEventos = async (req, res) => {
     const page = req.params.page || 1;
     try {
         try {
-            const eventos = await eventoModel.paginate({}, {limit, page});
+            const eventos = await eventoModel.paginate({}, {limit, page, sort: { _id: -1 }});
             res.status(200).json({
                 eventos
             })
