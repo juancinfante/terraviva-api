@@ -19,31 +19,71 @@ const crearEvento = async (req, res) => {
     }
 }
 
+// const paginationEventos = async (req, res) => {
+//     const prov = req.params.prov;
+//     const limit = req.params.limit || 10;
+//     const page = req.params.page || 1;
+//     const resp = await eventoModel.paginate({provincia: prov}, {limit: limit, page: page,sort: { _id: -1 }})
+//     res.json(resp);
+// }
+
 const paginationEventos = async (req, res) => {
     const prov = req.params.prov;
-    const limit = req.params.limit || 10;
-    const page = req.params.page || 1;
-    const resp = await eventoModel.paginate({provincia: prov}, {limit: limit, page: page,sort: { _id: -1 }})
-    res.json(resp);
-}
+    const limit = parseInt(req.params.limit) || 10;
+    const page = parseInt(req.params.page) || 1;
+    const today = new Date().toISOString().split('T')[0]; // Obtener la fecha de hoy en formato YYYY-MM-DD
+
+    try {
+        const resp = await eventoModel.paginate(
+            { provincia: prov, fecha: { $gte: today } }, // Filtrar por provincia y fecha igual o mayor a hoy
+            { limit, page, sort: { _id: -1 } }
+        );
+        res.json(resp);
+    } catch (error) {
+        res.status(400).json({
+            msg: error.message
+        });
+    }
+};
+
+
+// const obtenerEventos = async (req, res) => {
+//     const limit = req.params.limit || 10;
+//     const page = req.params.page || 1;
+//     try {
+//         try {
+//             const eventos = await eventoModel.paginate({}, {limit, page, sort: { _id: -1 }});
+//             res.status(200).json({
+//                 eventos
+//             })
+//         } catch (error) {
+//             res.status(400).json({
+//                 msg: error
+//             })
+//         }
+//     } catch (error) { 
+//     }
+// }
 
 const obtenerEventos = async (req, res) => {
-    const limit = req.params.limit || 10;
-    const page = req.params.page || 1;
+    const limit = parseInt(req.params.limit) || 10;
+    const page = parseInt(req.params.page) || 1;
+    const today = new Date().toISOString().split('T')[0]; // Obtener la fecha de hoy en formato YYYY-MM-DD
+
     try {
-        try {
-            const eventos = await eventoModel.paginate({}, {limit, page, sort: { _id: -1 }});
-            res.status(200).json({
-                eventos
-            })
-        } catch (error) {
-            res.status(400).json({
-                msg: error
-            })
-        }
-    } catch (error) { 
+        const eventos = await eventoModel.paginate(
+            { fecha: { $gte: today } }, // Filtrar eventos cuya fecha sea igual o mayor a la fecha de hoy
+            { limit, page, sort: { _id: -1 } }
+        );
+        res.status(200).json({
+            eventos
+        });
+    } catch (error) {
+        res.status(400).json({
+            msg: error.message
+        });
     }
-}
+};
 
 const obtenerEvento = async (req, res) => {
     try {
