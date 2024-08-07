@@ -23,7 +23,7 @@ const paginationEventos = async (req, res) => {
     const prov = req.params.prov;
     const limit = parseInt(req.params.limit) || 10;
     const page = parseInt(req.params.page) || 1;
-    const today = new Date().toISOString().split('T')[0]; // Obtener lla fecha de hoy en formato YYYY-MM-DD
+    const today = new Date().toISOString().split('T')[0]; // Obtener la fecha de hoy en formato YYYY-MM-DD
 
     try {
         const resp = await eventoModel.paginate(
