@@ -48,6 +48,23 @@ const obtenerNoticias = async (req, res) => {
     }
 }
 
+const obtenerMasNoticias = async (req, res) => {
+    try {
+        const noticias = await noticiaModel.find({})
+            .sort({ _id: -1 })  // Ordena las noticias, si es necesario
+            .skip(5)             // Salta las primeras 5 noticias (empieza desde la sexta)
+            .limit(9);           // Obtén las siguientes 9 noticias (de la sexta a la decimocuarta)
+
+        res.status(200).json({
+            noticias
+        });
+    } catch (error) {
+        res.status(400).json({
+            msg: error.message || "Error al obtener las noticias"
+        });
+    }
+}
+
 const obtenerNoticia = async (req, res) => {
     try {
         let noticia = await noticiaModel.find({ _id: req.params.id});
@@ -137,6 +154,7 @@ const eliminarNoticia = async (req, res) => {
 module.exports = {
     crearNoticia,
     obtenerNoticias,
+    obtenerMasNoticias,
     obtenerNoticia,
     obtenerNoticiaPorPalabra,
     editarNoticia,
