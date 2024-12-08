@@ -8,8 +8,6 @@ const pagination = async (req, res) => {
     res.json(resp);
 }
 
-
-
 const crearNoticia = async (req, res) => {
 
     try{

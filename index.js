@@ -30,6 +30,8 @@ app.use('/api', require('./routes/album'));
 app.use('/api', require('./routes/noticia'));
 app.use('/api', require('./routes/evento'));
 app.use('/api', require('./routes/publicidad'));
+app.use('/api', require('./routes/cloudinary'));
+app.use('/api', require('./routes/bannerCentral'));
 
 
 

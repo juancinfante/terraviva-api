@@ -20,20 +20,26 @@ const crearAlbum = async (req, res) => {
 
 
 const obtenerAlbums = async (req, res) => {
-	const limit = req.params.limit || 10;
-	const page = req.params.page || 1;
-	try {
-		const albums = await albumModel.paginate({}, {limit, page});
-		res.status(200).json({
-			albums
-		})
-	} catch (error) {
-		res.status(400).json({
-			msg: error
-		})
-	}
-
-}
+    const limit = parseInt(req.params.limit) || 10; // Asegurarte de convertir el valor a número
+    const page = parseInt(req.params.page) || 1;
+    try {
+        const albums = await albumModel.paginate(
+            {}, // Filtro (puedes agregar condiciones aquí si es necesario)
+            {
+                limit,
+                page,
+                sort: { fecha: -1 } // Ordena por fecha de creación en orden descendente
+            }
+        );
+        res.status(200).json({
+            albums
+        });
+    } catch (error) {
+        res.status(400).json({
+            msg: error.message
+        });
+    }
+};
 
 const eliminarAlbum = async (req, res) => {
 	try {

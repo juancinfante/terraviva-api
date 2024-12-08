@@ -3,9 +3,7 @@ const publicidadModel = require("../models/publicidad");
 
 
 const crearPubli = async (req, res) => {
-
     try{
-
         let publi = new publicidadModel(req.body);
         await publi.save();
         
