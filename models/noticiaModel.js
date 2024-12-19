@@ -39,5 +39,5 @@ const noticiaModel = Schema({
 })
 
 noticiaModel.plugin(mongoosePaginate);
-
+noticiaModel.index({ created_at: -1 });
 module.exports = model('noticias', noticiaModel);
