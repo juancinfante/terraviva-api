@@ -34,8 +34,10 @@ const obtenerNoticias = async (req, res) => {
     try {
         // Realiza la paginación de las noticias
         const noticias = await noticiaModel.paginate({}, {
+            sort: { _id: -1 },
             limit,          // Número de noticias por página
             page,           // Página solicitada
+            lean: true
         });
 
         res.status(200).json(noticias);
@@ -47,23 +49,22 @@ const obtenerNoticias = async (req, res) => {
     }
 }
 
-const obtenerMasNoticias = async (req, res) => {
+const obtenerMasNoticias = async (req, res) => { 
+
     try {
-        const page = parseInt(req.query.page) || 1;  // Página solicitada (por defecto 1)
-        const pageSize = 3; // Número de noticias por página
-        const skip = (page - 1) * pageSize;  // Cálculo del "offset" para saltar las noticias anteriores
-
-        const noticias = await noticiaModel.find()
-            .sort({ created_at: -1 })  // Ordena por fecha de creación, las más recientes primero
-            .skip(skip)                 // Salta las noticias de las páginas anteriores
-            .limit(pageSize);          // Limita la cantidad de noticias por página
-
-        res.status(200).json({
-            noticias
+        // Realiza la paginación de las noticias
+        const noticias = await noticiaModel.paginate({}, {
+            sort: { _id: -1 },
+            limit: 5,          // Número de noticias por página
+            page: 2  ,
+            lean: true         // Página solicitada
         });
+
+        res.status(200).json(noticias);
+         // Devuelve las noticias
     } catch (error) {
         res.status(400).json({
-            msg: error.message || "Error al obtener las noticias"
+            msg: error.message || "Error al obtener las noticias",
         });
     }
 }
