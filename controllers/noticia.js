@@ -27,47 +27,55 @@ const crearNoticia = async (req, res) => {
     }
 }
 
+
 const obtenerNoticias = async (req, res) => {
-    const limit = parseInt(req.params.limit) || 10;  // Asegurándote de que 'limit' sea un número
-    const page = parseInt(req.params.page) || 1;     // Asegurándote de que 'page' sea un número
+    const limit = parseInt(req.params.limit) || 10; // Número de noticias por página
+    const page = parseInt(req.params.page) || 1;   // Página solicitada
 
     try {
-        // Realiza la paginación de las noticias
-        const noticias = await noticiaModel.paginate({}, {
-            sort: { _id: -1 },
-            limit,          // Número de noticias por página
-            page,           // Página solicitada
-            lean: true
-        });
+        // Consulta con proyección para devolver solo 'imagen' y 'titulo'
+        const noticias = await noticiaModel.paginate(
+            {}, // Sin filtro adicional
+            {
+                sort: { _id: -1 },  // Orden descendente por _id
+                limit,              // Límite de documentos por página
+                page,               // Página actual
+                select: "img_portada provincia titulo", // Solo devuelve estos campos
+                lean: true,         // Devuelve objetos JSON planos
+            }
+        );
 
-        res.status(200).json(noticias);
-         // Devuelve las noticias
+        res.status(200).json(noticias); // Respuesta con las noticias
     } catch (error) {
         res.status(400).json({
             msg: error.message || "Error al obtener las noticias",
         });
     }
-}
+};
 
-const obtenerMasNoticias = async (req, res) => { 
 
+const obtenerMasNoticias = async (req, res) => {
     try {
-        // Realiza la paginación de las noticias
-        const noticias = await noticiaModel.paginate({}, {
-            sort: { _id: -1 },
-            limit: 5,          // Número de noticias por página
-            page: 2  ,
-            lean: true         // Página solicitada
-        });
+        // Calcula el rango deseado: desde la noticia 6 hasta la 14
+        const skip = 5; // Salta las primeras 5 noticias (hasta la posición 6)
+        const limit = 9; // Trae 9 noticias (de la 6 a la 14 inclusive)
 
-        res.status(200).json(noticias);
-         // Devuelve las noticias
+        // Consulta con proyección para devolver solo 'imagen' y 'titulo'
+        const noticias = await noticiaModel.find({})
+            .sort({ _id: -1 })       // Orden descendente por _id
+            .skip(skip)              // Salta los primeros 5 documentos
+            .limit(limit)            // Limita la cantidad a 9 documentos
+            .select("img_portada provincia titulo") // Devuelve solo estos campos
+            .lean();                 // Devuelve objetos planos
+
+        res.status(200).json(noticias); // Devuelve las noticias seleccionadas
     } catch (error) {
         res.status(400).json({
             msg: error.message || "Error al obtener las noticias",
         });
     }
-}
+};
+
 
 const obtenerNoticia = async (req, res) => {
     try {
