@@ -26,7 +26,7 @@ const obtenerAlbums = async (req, res) => {
         const albums = await albumModel.paginate(
             {}, // Filtro (puedes agregar condiciones aquí si es necesario)
             {
-				select: 'nombre ph fecha portada' , 
+				select: 'nombre ph fecha portada created_at' , 
                 limit,
                 page,
                 sort: { fecha: -1 } // Ordena por fecha de creación en orden descendente
