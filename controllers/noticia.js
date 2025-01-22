@@ -2,10 +2,25 @@ const noticiaModel = require('../models/noticiaModel');
 
 const pagination = async (req, res) => {
     const prov = req.params.prov;
-    const limit = req.params.limit || 10;
-    const page = req.params.page || 1;
-    const resp = await noticiaModel.paginate({ provincia: prov }, { limit: limit, page: page, sort: { _id: -1 } })
-    res.json(resp);
+    const limit = parseInt(req.params.limit) || 10; // Asegura que 'limit' sea un número
+    const page = parseInt(req.params.page) || 1;    // Asegura que 'page' sea un número
+
+    try {
+        const resp = await noticiaModel.paginate(
+            { provincia: prov }, // Filtrar por provincia
+            {
+                select: 'provincia img_portada titulo descripcion', // Seleccionar campos específicos
+                limit: limit,    // Número de documentos por página
+                page: page,      // Página solicitada
+                sort: { _id: -1 } // Orden descendente por ID
+            }
+        );
+        res.json(resp); // Devuelve la respuesta paginada
+    } catch (error) {
+        res.status(400).json({
+            msg: error.message || "Error al realizar la paginación",
+        });
+    }
 }
 
 const crearNoticia = async (req, res) => {
