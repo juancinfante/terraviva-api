@@ -18,6 +18,10 @@ const albumModel = Schema({
         type: [],
         required: true
     },
+    portada: {
+        type: String,
+        required: true
+    },
     created_at:{
         type: Date,
         default: Date.now()
