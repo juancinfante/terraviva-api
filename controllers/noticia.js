@@ -55,7 +55,7 @@ const obtenerNoticias = async (req, res) => {
                 sort: { _id: -1 },  // Orden descendente por _id
                 limit,              // Límite de documentos por página
                 page,               // Página actual
-                select: "img_portada provincia titulo", // Solo devuelve estos campos
+                select: "img_portada provincia titulo created_at editor", // Solo devuelve estos campos
                 lean: true,         // Devuelve objetos JSON planos
             }
         );
