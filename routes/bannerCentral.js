@@ -1,10 +1,10 @@
 const express = require('express');
-const { crearBanner, obtenerBanners, editarBanner, editarLinkEvento } = require('../controllers/bannerCentral');
+const { crearBanner, editarBanner, editarLinkEvento, obtenerBanner } = require('../controllers/bannerCentral');
 const router = express.Router();
 
 
 router.post('/crear-banner', crearBanner);
-router.get('/get-banners', obtenerBanners);
+router.get('/get-banner', obtenerBanner);
 router.put('/edit-banners/:bannerId', editarBanner);
 router.put('/edit-link/:bannerId', editarLinkEvento);
 

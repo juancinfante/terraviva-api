@@ -17,7 +17,7 @@ const crearBanner = async (req, res) => {
     }
 }
 
-const obtenerBanners = async (req, res) => {
+const obtenerBanner = async (req, res) => {
     try {
         try {
             const banners = await bannerCentral.find();
@@ -84,7 +84,7 @@ const editarLinkEvento = async (req, res) => {
 
 module.exports = {
     crearBanner,
-    obtenerBanners,
+    obtenerBanner,
     editarBanner,
     editarLinkEvento
 }

@@ -1,11 +1,12 @@
 const express = require('express');
-const { obtenerImagenes, eliminarImagen, subirImagen, upload } = require('../controllers/cloudinary');
+const { obtenerImagenes, eliminarImagen, subirImagen, upload, obtenerBanners } = require('../controllers/cloudinary');
 const router = express.Router();
 
 
 router.get('/getimages/:folder', obtenerImagenes);
-router.post('/image/:id', eliminarImagen);
+router.delete('/image/', eliminarImagen);
 router.post('/upload-image',upload.single('file'), subirImagen);
+router.get('/banners', obtenerBanners);
 
 
  

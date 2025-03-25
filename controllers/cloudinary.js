@@ -76,26 +76,83 @@ const obtenerImagenes = async (req, res) => {
     }
 }
 
+
 const eliminarImagen = async (req, res) => {
-    try {
-        const { id } = req.params; // Obtenemos el public_id desde los parámetros de la URL
-        const { folder } = req.body;
-        if (!id) {
-            return res.status(400).json({ error: 'El public_id es obligatorio' });
-        }
+  try {
+      const { id } = req.body; // El id viene en el cuerpo de la solicitud
 
-        // Llamada a Cloudinary para eliminar la imagen
-        const result = await cloudinary.uploader.destroy(folder+"/"+id);
+      if (!id) {
+          return res.status(400).json({
+              message: 'El public_id es requerido para eliminar la imagen'
+          });
+      }
 
-        if (result.result === 'ok') {
-            return res.status(200).json({ message: 'Imagen eliminada correctamente', id });
-        } else {
-            return res.status(400).json({ error: 'No se pudo eliminar la imagen, verifica el public_id', id });
-        }
-    } catch (error) {
-        console.error('Error al eliminar la imagen:', error);
-        res.status(500).json({ error: 'Error interno del servidor' });
-    }
+      console.log('Intentando eliminar imagen con public_id:', id); // Para depurar
+
+      // Elimina la imagen usando el id
+      const result = await cloudinary.uploader.destroy(id);
+
+      console.log('Resultado de Cloudinary:', result); // Para depurar
+
+      // Verifica el resultado de la eliminación
+      if (result.result === 'ok') {
+          res.json({
+              message: 'Banner eliminado exitosamente',
+              public_id: id
+          });
+      } else {
+          res.status(404).json({
+              message: 'No se encontró la imagen con ese public_id',
+              public_id: id,
+              result: result.result
+          });
+      }
+  } catch (error) {
+      console.error('Error al eliminar el banner:', error);
+      res.status(500).json({
+          error: 'Error al eliminar el banner',
+          message: error.message
+      });
+  }
+};
+
+const obtenerBanners = async (req, res) => {
+  try {
+      const folderPath = 'terraviva/banners'; // Solo terraviva para ver si hay algo ahí
+      // O usa '' (vacío) para buscar en toda la cuenta
+      
+      console.log('Buscando en carpeta:', folderPath);
+      
+      const response = await cloudinary.search
+          .expression(`folder:${folderPath}`)
+          .sort_by('created_at', 'desc')
+          .max_results(30)
+          .execute();
+
+      console.log('Total de recursos:', response.total_count);
+      console.log('Recursos:', response.resources);
+
+      if (response.total_count === 0) {
+          return res.status(404).json({
+              message: 'No se encontraron banners en la carpeta especificada',
+              folder: folderPath
+          });
+      }
+
+      const banners = response.resources.map((img) => ({
+          url: img.secure_url,
+          public_id: img.public_id,
+          folder: img.folder,
+      }));
+
+      res.json(banners);
+  } catch (error) {
+      console.error('Error al obtener banners:', error);
+      res.status(500).json({ 
+          error: 'Error al obtener los banners',
+          message: error.message 
+      });
+  }
 };
 
 
@@ -103,5 +160,6 @@ module.exports = {
     subirImagen,
     upload,
     obtenerImagenes,
-    eliminarImagen
+    eliminarImagen,
+    obtenerBanners
 }
