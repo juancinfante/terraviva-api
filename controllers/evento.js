@@ -1,3 +1,4 @@
+const { default: slugify } = require('slugify');
 const eventoModel = require('../models/eventoModel');
 
 const crearEvento = async (req, res) => {
@@ -19,52 +20,116 @@ const crearEvento = async (req, res) => {
     }
 }
 
-const paginationEventos = async (req, res) => {
-    const prov = req.params.prov;
-    const limit = parseInt(req.params.limit) || 10;
-    const page = parseInt(req.params.page) || 1;
-    const today = new Date().toISOString().split('T')[0]; // Obtener la fecha de hoy en formato YYYY-MM-DD
+// const paginationEventos = async (req, res) => {
+//     const prov = req.params.prov;
+//     const limit = parseInt(req.params.limit) || 10;
+//     const page = parseInt(req.params.page) || 1;
+//     const today = new Date().toISOString().split('T')[0]; // Obtener la fecha de hoy en formato YYYY-MM-DD
 
-    try {
-        const resp = await eventoModel.paginate(
-            { provincia: prov, fecha: { $gte: today } }, // Filtrar por provincia y fecha igual o mayor a hoy
-            { 
-                limit, 
-                page, 
-                sort: { fecha: 1 } // Ordenar por fecha en orden ascendente
-            }
-        );
-        res.status(200).json(resp);
-    } catch (error) {
-        res.status(400).json({
-            msg: error.message
-        });
-    }
+//     try {
+//         const resp = await eventoModel.paginate(
+//             { provincia: prov, fecha: { $gte: today } }, // Filtrar por provincia y fecha igual o mayor a hoy
+//             { 
+//                 limit, 
+//                 page, 
+//                 sort: { fecha: 1 } // Ordenar por fecha en orden ascendente
+//             }
+//         );
+//         res.status(200).json(resp);
+//     } catch (error) {
+//         res.status(400).json({
+//             msg: error.message
+//         });
+//     }
+// };
+
+const paginationEventos = async (req, res) => {
+  const prov = req.params.prov;
+  const limit = parseInt(req.params.limit) || 10;
+  const page = parseInt(req.params.page) || 1;
+  const today = new Date().toISOString().split('T')[0]; // yyyy-mm-dd
+
+  try {
+    const resp = await eventoModel.paginate(
+      { provincia: prov, fecha: { $gte: today } },
+      { 
+        limit, 
+        page, 
+        sort: { fecha: 1, _id: 1 } // ✅ orden estable
+      }
+    );
+    res.status(200).json(resp);
+  } catch (error) {
+    console.error(error);
+    res.status(400).json({ msg: error.message });
+  }
 };
 
 
-const obtenerEventos = async (req, res) => {
-    const limit = parseInt(req.params.limit) || 10;
-    const page = parseInt(req.params.page) || 1;
-    const today = new Date().toISOString().split('T')[0]; // Obtener la fecha de hoy en formato yyyy-mm-dd
+
+// const obtenerEventos = async (req, res) => {
+//     const limit = parseInt(req.params.limit) || 10;
+//     const page = parseInt(req.params.page) || 1;
+//     const today = new Date().toISOString().split('T')[0]; // Obtener la fecha de hoy en formato yyyy-mm-dd
     
-    try {
-        const eventos = await eventoModel.paginate(
-            { fecha: { $gte: today } }, // Filtrar eventos cuya fecha es mayor o igual a la fecha de hoy
-            {
-                limit,
-                page,
-                sort: { fecha: 1 } // Ordenar por fecha en orden ascendente
-            }
-        );
-        res.status(200).json({
-            eventos
-        });
-    } catch (error) {
-        res.status(400).json({
-            msg: error.message
-        });
-    }
+//     try {
+//         const eventos = await eventoModel.paginate(
+//             { fecha: { $gte: today } }, // Filtrar eventos cuya fecha es mayor o igual a la fecha de hoy
+//             {
+//                 limit,
+//                 page,
+//                 sort: { fecha: 1 } // Ordenar por fecha en orden ascendente
+//             }
+//         );
+//         res.status(200).json({
+//             eventos
+//         });
+//     } catch (error) {
+//         res.status(400).json({
+//             msg: error.message
+//         });
+//     }
+// };
+
+const obtenerEventos = async (req, res) => {
+  const limit = parseInt(req.params.limit) || 10;
+  const page = parseInt(req.params.page) || 1;
+  const today = new Date().toISOString().split('T')[0]; // yyyy-mm-dd
+
+  try {
+    const eventos = await eventoModel.paginate(
+      { fecha: { $gte: today } },
+      {
+        limit,
+        page,
+        sort: { fecha: 1, _id: 1 } // orden estable
+      }
+    );
+    res.status(200).json({ eventos });
+  } catch (error) {
+    res.status(400).json({ msg: error.message });
+  }
+};
+
+const obtenerEventosPorProvincia = async (req, res) => {
+  const limit = parseInt(req.params.limit) || 10;
+  const page = parseInt(req.params.page) || 1;
+  const today = new Date().toISOString().split('T')[0]; // yyyy-mm-dd
+
+  try {
+    const eventos = await eventoModel.paginate(
+      { fecha: { $gte: today } },
+      { slugProvincia: req.params.slug},
+      {
+        limit,
+        page,
+        sort: { fecha: 1, _id: 1 } // orden estable
+      }
+    );
+    res.status(200).json({ eventos });
+  } catch (error) {
+    res.status(400).json({ msg: error.message });
+  }
 };
 
 const obtenerEvento = async (req, res) => {
@@ -132,11 +197,40 @@ const eliminarEvento = async (req, res) => {
 	}
 };
 
+const actualizarSlugsTodosEventos = async(req, res) => {
+  try {
+    const cursor = eventoModel.find().cursor();
+
+    for (let evento = await cursor.next(); evento != null; evento = await cursor.next()) {
+      const nuevoSlugTitulo = slugify(evento.titulo || '', {
+        lower: true,      // 🔽 convierte todo a minúscula
+        strict: true      // 🔽 elimina caracteres especiales como tildes
+      });
+
+      const cambios = {};
+
+      if (!evento.slugTitulo || evento.slugTitulo !== nuevoSlugTitulo) {
+        cambios.slugTitulo = nuevoSlugTitulo;
+      }
+
+      if (Object.keys(cambios).length > 0) {
+        await eventoModel.updateOne({ _id: evento._id }, { $set: cambios });
+      }
+    }
+
+    console.log('Slugs actualizados.');
+  } catch (error) {
+    console.error('Error al actualizar slugs:', error);
+  }
+}
+
 module.exports = {
     crearEvento,
     obtenerEventos,
     editarEvento,
     eliminarEvento,
     obtenerEvento,
-    paginationEventos
+    paginationEventos,
+    // obtenerEventoPorSlugTitulo,
+    actualizarSlugsTodosEventos
 }

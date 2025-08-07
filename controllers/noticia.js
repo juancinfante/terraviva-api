@@ -1,4 +1,40 @@
+const { default: slugify } = require('slugify');
 const noticiaModel = require('../models/noticiaModel');
+
+async function actualizarSlugsTodos() {
+  try {
+    const cursor = noticiaModel.find().cursor();
+
+    for (let noticia = await cursor.next(); noticia != null; noticia = await cursor.next()) {
+      const nuevoSlugTitulo = slugify(noticia.titulo || '', {
+        lower: true,
+        strict: true
+      });
+
+      const nuevoSlugProvincia = slugify(noticia.provincia || '', {
+        lower: true,
+        strict: true
+      });
+
+      const cambios = {};
+      if (!noticia.slugTitulo || noticia.slugTitulo !== nuevoSlugTitulo) {
+        cambios.slugTitulo = nuevoSlugTitulo;
+      }
+      if (!noticia.slugProvincia || noticia.slugProvincia !== nuevoSlugProvincia) {
+        cambios.slugProvincia = nuevoSlugProvincia;
+      }
+
+      if (Object.keys(cambios).length > 0) {
+        await noticiaModel.updateOne({ _id: noticia._id }, { $set: cambios });
+      }
+    }
+
+    console.log('Slugs actualizados.');
+  } catch (error) {
+    console.error('Error al actualizar slugs:', error);
+  }
+}
+
 
 const pagination = async (req, res) => {
     const prov = req.params.prov;
@@ -7,9 +43,9 @@ const pagination = async (req, res) => {
 
     try {
         const resp = await noticiaModel.paginate(
-            { provincia: prov }, // Filtrar por provincia
+            { slugProvincia: prov }, // Filtrar por provincia
             {
-                select: 'provincia img_portada titulo descripcion', // Seleccionar campos específicos
+                select: 'provincia img_portada titulo descripcion slugTitulo', // Seleccionar campos específicos
                 limit: limit,    // Número de documentos por página
                 page: page,      // Página solicitada
                 sort: { _id: -1 } // Orden descendente por ID
@@ -55,7 +91,7 @@ const obtenerNoticias = async (req, res) => {
                 sort: { _id: -1 },  // Orden descendente por _id
                 limit,              // Límite de documentos por página
                 page,               // Página actual
-                select: "img_portada provincia titulo created_at editor", // Solo devuelve estos campos
+                select: "img_portada provincia titulo created_at editor slugTitulo", // Solo devuelve estos campos
                 lean: true,         // Devuelve objetos JSON planos
             }
         );
@@ -80,7 +116,7 @@ const obtenerMasNoticias = async (req, res) => {
             .sort({ _id: -1 })       // Orden descendente por _id
             .skip(skip)              // Salta los primeros 5 documentos
             .limit(limit)            // Limita la cantidad a 9 documentos
-            .select("img_portada provincia titulo") // Devuelve solo estos campos
+            .select("img_portada provincia titulo slugTitulo") // Devuelve solo estos campos
             .lean();                 // Devuelve objetos planos
 
         res.status(200).json(noticias); // Devuelve las noticias seleccionadas
@@ -106,6 +142,32 @@ const obtenerNoticia = async (req, res) => {
     }
 }
 
+const obtenerNoticiaPorSlug = async (req, res) => {
+  try {
+    const slug = req.params.slug.toLowerCase();
+
+    const noticia = await noticiaModel.findOne({
+      $expr: {
+        $eq: [
+          { $toLower: "$slugTitulo" },
+          slug
+        ]
+      }
+    });
+
+    if (!noticia) {
+      return res.status(404).json({ msg: "Noticia no encontrada." });
+    }
+
+    res.status(200).json({ noticia });
+
+  } catch (error) {
+    res.status(500).json({
+      msg: "Contacte con administrador."
+    });
+  }
+};
+
 const obtenerNoticiaPorPalabra = async (req, res) => {
     const limit = req.params.limit || 10;
     const page = req.params.page || 1;
@@ -114,7 +176,8 @@ const obtenerNoticiaPorPalabra = async (req, res) => {
             $or: [
                 { titulo: { $regex: req.params.palabra, $options: 'i' } },
                 { descripcion: { $regex: req.params.palabra, $options: 'i' } },
-                { texto: { $regex: req.params.palabra, $options: 'i' } }
+                { texto: { $regex: req.params.palabra, $options: 'i' } },
+                { slugProvincia, slugTitulo}
             ]
         }, { limit: limit, page: page, sort: { _id: -1 } });
         res.status(200).json({
@@ -183,8 +246,10 @@ module.exports = {
     obtenerNoticias,
     obtenerMasNoticias,
     obtenerNoticia,
+    obtenerNoticiaPorSlug,
     obtenerNoticiaPorPalabra,
     editarNoticia,
     eliminarNoticia,
-    pagination
+    pagination,
+    actualizarSlugsTodos
 }
