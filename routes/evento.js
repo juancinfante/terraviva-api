@@ -1,5 +1,5 @@
 const express = require('express');
-const { crearEvento, obtenerEventos, obtenerEvento, editarEvento, eliminarEvento, paginationEventos, actualizarSlugsTodosEventos, obtenerEventoPorSlugTitulo, obtenerEventosPorProvincia } = require('../controllers/evento');
+const { crearEvento, obtenerEventos, obtenerEvento, editarEvento, eliminarEvento, paginationEventos, actualizarSlugsTodosEventos, obtenerEventoPorSlugTitulo, obtenerEventosPorProvincia, obtenerEventoPorSlug } = require('../controllers/evento');
 const router = express.Router();
 
 
@@ -11,7 +11,7 @@ router.delete('/evento/:id', eliminarEvento);
 router.get('/eventos/:prov/:limit/:page', paginationEventos);
 // router.get('/eventos/slug/titulo/:slug', obtenerEventoPorSlugTitulo);
 // router.get('/eventos/provincia/:slug', obtenerEventosPorProvincia);
-// router.get('/eventos/slugs', actualizarSlugsTodosEventos);
+router.get('/eventos/:slug', obtenerEventoPorSlug);
 
 
 module.exports = router;

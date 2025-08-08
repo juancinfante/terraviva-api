@@ -1,24 +1,54 @@
 const { default: slugify } = require('slugify');
 const eventoModel = require('../models/eventoModel');
 
+// const crearEvento = async (req, res) => {
+
+//     try{
+
+//         let evneto = new eventoModel(req.body);
+//         await evneto.save();
+        
+//         res.status(201).json({
+//             msg: "Creado con exito."
+//         })
+
+//     }catch(error){
+        
+//         res.status(400).json({
+//             msg: "Conctacte con administrador"
+//         })
+//     }
+// }
+
 const crearEvento = async (req, res) => {
+  try {
+    const { titulo, provincia, ...resto } = req.body;
 
-    try{
+    const slugTitulo = slugify(titulo, { lower: true, strict: true });
+    const slugProvincia = slugify(provincia, { lower: true, strict: true });
 
-        let evneto = new eventoModel(req.body);
-        await evneto.save();
-        
-        res.status(201).json({
-            msg: "Creado con exito."
-        })
+    const evento = new eventoModel({
+      titulo,
+      provincia,
+      slugTitulo,
+      slugProvincia,
+      ...resto,
+    });
 
-    }catch(error){
-        
-        res.status(400).json({
-            msg: "Conctacte con administrador"
-        })
-    }
-}
+    await evento.save();
+
+    res.status(201).json({
+      msg: "Creado con éxito.",
+      evento
+    });
+
+  } catch (error) {
+    console.error(error);
+    res.status(400).json({
+      msg: "Contacte con el administrador",
+    });
+  }
+};
 
 // const paginationEventos = async (req, res) => {
 //     const prov = req.params.prov;
@@ -51,7 +81,7 @@ const paginationEventos = async (req, res) => {
 
   try {
     const resp = await eventoModel.paginate(
-      { provincia: prov, fecha: { $gte: today } },
+      { slugProvincia: prov, fecha: { $gte: today } },
       { 
         limit, 
         page, 
@@ -90,6 +120,32 @@ const paginationEventos = async (req, res) => {
 //         });
 //     }
 // };
+
+const obtenerEventoPorSlug = async (req, res) => {
+  try {
+    const slug = req.params.slug.toLowerCase();
+
+    const evento = await eventoModel.findOne({
+      $expr: {
+        $eq: [
+          { $toLower: "$slugTitulo" },
+          slug
+        ]
+      }
+    });
+
+    if (!evento) {
+      return res.status(404).json({ msg: "Evento no encontrado." });
+    }
+
+    res.status(200).json({ evento });
+
+  } catch (error) {
+    res.status(500).json({
+      msg: "Contacte con administrador."
+    });
+  }
+};
 
 const obtenerEventos = async (req, res) => {
   const limit = parseInt(req.params.limit) || 10;
@@ -146,30 +202,67 @@ const obtenerEvento = async (req, res) => {
     }
 }
 
+// const editarEvento = async (req, res) => {
+// 	try {
+// 		const eventoEditar = await eventoModel.findById(req.body.id);
+
+// 		if (!eventoEditar) {
+// 			return res.status(404).json({
+// 				ok: false,
+// 				msg: 'No existe ningun evento con este id.',
+// 			});
+// 		}
+
+// 		await eventoModel.findByIdAndUpdate(req.body.id, req.body);
+
+// 		res.status(200).json({
+// 			ok: true,
+// 			msg: 'Evento editado.',
+// 		});
+// 	} catch (error) {
+// 		console.log(error);
+// 		res.status(500).json({
+// 			ok: false,
+// 			msg: 'hable con el administrador',
+// 		});
+// 	}
+// };
+
 const editarEvento = async (req, res) => {
-	try {
-		const eventoEditar = await eventoModel.findById(req.body.id);
+  try {
+    const eventoEditar = await eventoModel.findById(req.body.id);
 
-		if (!eventoEditar) {
-			return res.status(404).json({
-				ok: false,
-				msg: 'No existe ningun evento con este id.',
-			});
-		}
+    if (!eventoEditar) {
+      return res.status(404).json({
+        ok: false,
+        msg: 'No existe ningún evento con este id.',
+      });
+    }
 
-		await eventoModel.findByIdAndUpdate(req.body.id, req.body);
+    // Si cambió el título, actualizar slugTitulo
+    if (req.body.titulo && req.body.titulo !== eventoEditar.titulo) {
+      req.body.slugTitulo = slugify(req.body.titulo, { lower: true, strict: true });
+    }
 
-		res.status(200).json({
-			ok: true,
-			msg: 'Evento editado.',
-		});
-	} catch (error) {
-		console.log(error);
-		res.status(500).json({
-			ok: false,
-			msg: 'hable con el administrador',
-		});
-	}
+    // Si cambió la provincia, actualizar slugProvincia
+    if (req.body.provincia && req.body.provincia !== eventoEditar.provincia) {
+      req.body.slugProvincia = slugify(req.body.provincia, { lower: true, strict: true });
+    }
+
+    await eventoModel.findByIdAndUpdate(req.body.id, req.body, { new: true });
+
+    res.status(200).json({
+      ok: true,
+      msg: 'Evento editado.',
+    });
+
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({
+      ok: false,
+      msg: 'Hable con el administrador',
+    });
+  }
 };
 
 const eliminarEvento = async (req, res) => {
@@ -231,6 +324,6 @@ module.exports = {
     eliminarEvento,
     obtenerEvento,
     paginationEventos,
-    // obtenerEventoPorSlugTitulo,
+    obtenerEventoPorSlug,
     actualizarSlugsTodosEventos
 }

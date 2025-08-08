@@ -59,24 +59,54 @@ const pagination = async (req, res) => {
     }
 }
 
+// const crearNoticia = async (req, res) => {
+
+//     try {
+
+//         let noticia = new noticiaModel(req.body);
+//         await noticia.save();
+
+//         res.status(201).json({
+//             msg: "Creado con exito."
+//         })
+
+//     } catch (error) {
+
+//         res.status(400).json({
+//             msg: "Conctacte con administrador"
+//         })
+//     }
+// }
+
 const crearNoticia = async (req, res) => {
+  try {
+    const { titulo, provincia, ...resto } = req.body;
 
-    try {
+    const slugTitulo = slugify(titulo, { lower: true, strict: true });
+    const slugProvincia = slugify(provincia, { lower: true, strict: true });
 
-        let noticia = new noticiaModel(req.body);
-        await noticia.save();
+    const noticia = new noticiaModel({
+      titulo,
+      provincia,
+      slugTitulo,
+      slugProvincia,
+      ...resto
+    });
 
-        res.status(201).json({
-            msg: "Creado con exito."
-        })
+    await noticia.save();
 
-    } catch (error) {
+    res.status(201).json({
+      msg: "Creado con éxito.",
+      noticia
+    });
 
-        res.status(400).json({
-            msg: "Conctacte con administrador"
-        })
-    }
-}
+  } catch (error) {
+    console.error(error);
+    res.status(400).json({
+      msg: "Contacte con el administrador",
+    });
+  }
+};
 
 
 const obtenerNoticias = async (req, res) => {
@@ -177,43 +207,81 @@ const obtenerNoticiaPorPalabra = async (req, res) => {
                 { titulo: { $regex: req.params.palabra, $options: 'i' } },
                 { descripcion: { $regex: req.params.palabra, $options: 'i' } },
                 { texto: { $regex: req.params.palabra, $options: 'i' } },
-                { slugProvincia, slugTitulo}
+                // { slugProvincia, slugTitulo}
             ]
         }, { limit: limit, page: page, sort: { _id: -1 } });
         res.status(200).json({
             noticia
         });
     } catch (error) {
+        console.log(error)
         res.status(500).json({
             msg: "Contacte con administrador."
         });
     }
 }
 
+// const editarNoticia = async (req, res) => {
+//     try {
+//         const noticiaEditar = await noticiaModel.findById(req.body.id);
+
+//         if (!noticiaEditar) {
+//             return res.status(404).json({
+//                 ok: false,
+//                 msg: 'No existe ninguna noticia con este id.',
+//             });
+//         }
+
+//         await noticiaModel.findByIdAndUpdate(req.body.id, req.body);
+
+//         res.status(200).json({
+//             ok: true,
+//             msg: 'Noticia editada.',
+//         });
+//     } catch (error) {
+//         console.log(error);
+//         res.status(500).json({
+//             ok: false,
+//             msg: 'hable con el administrador',
+//         });
+//     }
+// };
+
 const editarNoticia = async (req, res) => {
-    try {
-        const noticiaEditar = await noticiaModel.findById(req.body.id);
+  try {
+    const noticiaEditar = await noticiaModel.findById(req.body.id);
 
-        if (!noticiaEditar) {
-            return res.status(404).json({
-                ok: false,
-                msg: 'No existe ninguna noticia con este id.',
-            });
-        }
-
-        await noticiaModel.findByIdAndUpdate(req.body.id, req.body);
-
-        res.status(200).json({
-            ok: true,
-            msg: 'Noticia editada.',
-        });
-    } catch (error) {
-        console.log(error);
-        res.status(500).json({
-            ok: false,
-            msg: 'hable con el administrador',
-        });
+    if (!noticiaEditar) {
+      return res.status(404).json({
+        ok: false,
+        msg: 'No existe ninguna noticia con este id.',
+      });
     }
+
+    // Si cambió el título, actualizar slugTitulo
+    if (req.body.titulo && req.body.titulo !== noticiaEditar.titulo) {
+      req.body.slugTitulo = slugify(req.body.titulo, { lower: true, strict: true });
+    }
+
+    // Si cambió la provincia, actualizar slugProvincia
+    if (req.body.provincia && req.body.provincia !== noticiaEditar.provincia) {
+      req.body.slugProvincia = slugify(req.body.provincia, { lower: true, strict: true });
+    }
+
+    await noticiaModel.findByIdAndUpdate(req.body.id, req.body, { new: true });
+
+    res.status(200).json({
+      ok: true,
+      msg: 'Noticia editada.',
+    });
+
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({
+      ok: false,
+      msg: 'Hable con el administrador',
+    });
+  }
 };
 
 const eliminarNoticia = async (req, res) => {
