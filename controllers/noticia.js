@@ -1,11 +1,47 @@
 const { default: slugify } = require('slugify');
 const noticiaModel = require('../models/noticiaModel');
 
+// async function actualizarSlugsTodos() {
+//   try {
+//     const cursor = noticiaModel.find().cursor();
+
+//     for (let noticia = await cursor.next(); noticia != null; noticia = await cursor.next()) {
+//       const nuevoSlugTitulo = slugify(noticia.titulo || '', {
+//         lower: true,
+//         strict: true
+//       });
+
+//       const nuevoSlugProvincia = slugify(noticia.provincia || '', {
+//         lower: true,
+//         strict: true
+//       });
+
+//       const cambios = {};
+//       if (!noticia.slugTitulo || noticia.slugTitulo !== nuevoSlugTitulo) {
+//         cambios.slugTitulo = nuevoSlugTitulo;
+//       }
+//       if (!noticia.slugProvincia || noticia.slugProvincia !== nuevoSlugProvincia) {
+//         cambios.slugProvincia = nuevoSlugProvincia;
+//       }
+
+//       if (Object.keys(cambios).length > 0) {
+//         await noticiaModel.updateOne({ _id: noticia._id }, { $set: cambios });
+//       }
+//     }
+
+//     console.log('Slugs actualizados.');
+//   } catch (error) {
+//     console.error('Error al actualizar slugs:', error);
+//   }
+// }
+
 async function actualizarSlugsTodos() {
   try {
-    const cursor = noticiaModel.find().cursor();
+    const noticias = await noticiaModel.find()
+      .sort({ _id: -1 }) // ordenar por los más recientes
+      .limit(5);         // limitar a los últimos 5
 
-    for (let noticia = await cursor.next(); noticia != null; noticia = await cursor.next()) {
+    for (const noticia of noticias) {
       const nuevoSlugTitulo = slugify(noticia.titulo || '', {
         lower: true,
         strict: true
@@ -29,12 +65,11 @@ async function actualizarSlugsTodos() {
       }
     }
 
-    console.log('Slugs actualizados.');
+    console.log('Slugs actualizados para las últimas 5 noticias.');
   } catch (error) {
     console.error('Error al actualizar slugs:', error);
   }
 }
-
 
 const pagination = async (req, res) => {
     const prov = req.params.prov;
@@ -138,8 +173,8 @@ const obtenerNoticias = async (req, res) => {
 const obtenerMasNoticias = async (req, res) => {
     try {
         // Calcula el rango deseado: desde la noticia 6 hasta la 14
-        const skip = 5; // Salta las primeras 5 noticias (hasta la posición 6)
-        const limit = 9; // Trae 9 noticias (de la 6 a la 14 inclusive)
+        const skip = 3; // Salta las primeras 3 noticias (hasta la posición 6)
+        const limit = 11; // Trae 9 noticias (de la 3 a la 11 inclusive)
 
         // Consulta con proyección para devolver solo 'imagen' y 'titulo'
         const noticias = await noticiaModel.find({})
