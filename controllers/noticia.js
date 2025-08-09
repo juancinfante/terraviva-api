@@ -174,7 +174,7 @@ const obtenerMasNoticias = async (req, res) => {
     try {
         // Calcula el rango deseado: desde la noticia 6 hasta la 14
         const skip = 3; // Salta las primeras 3 noticias (hasta la posición 6)
-        const limit = 11; // Trae 9 noticias (de la 3 a la 11 inclusive)
+        const limit = 12; // Trae 9 noticias (de la 3 a la 11 inclusive)
 
         // Consulta con proyección para devolver solo 'imagen' y 'titulo'
         const noticias = await noticiaModel.find({})

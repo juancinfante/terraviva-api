@@ -12,6 +12,7 @@ router.get('/eventos/:prov/:limit/:page', paginationEventos);
 // router.get('/eventos/slug/titulo/:slug', obtenerEventoPorSlugTitulo);
 // router.get('/eventos/provincia/:slug', obtenerEventosPorProvincia);
 router.get('/eventos/:slug', obtenerEventoPorSlug);
+router.get('/act', actualizarSlugsTodosEventos);
 
 
 module.exports = router;

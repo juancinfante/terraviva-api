@@ -290,14 +290,19 @@ const eliminarEvento = async (req, res) => {
 	}
 };
 
-const actualizarSlugsTodosEventos = async(req, res) => {
+const actualizarSlugsTodosEventos = async (req, res) => {
   try {
     const cursor = eventoModel.find().cursor();
 
     for (let evento = await cursor.next(); evento != null; evento = await cursor.next()) {
       const nuevoSlugTitulo = slugify(evento.titulo || '', {
-        lower: true,      // 🔽 convierte todo a minúscula
-        strict: true      // 🔽 elimina caracteres especiales como tildes
+        lower: true,
+        strict: true
+      });
+
+      const nuevoSlugProvincia = slugify(evento.provincia || '', {
+        lower: true,
+        strict: true
       });
 
       const cambios = {};
@@ -306,16 +311,22 @@ const actualizarSlugsTodosEventos = async(req, res) => {
         cambios.slugTitulo = nuevoSlugTitulo;
       }
 
+      if (!evento.slugProvincia || evento.slugProvincia !== nuevoSlugProvincia) {
+        cambios.slugProvincia = nuevoSlugProvincia;
+      }
+
       if (Object.keys(cambios).length > 0) {
         await eventoModel.updateOne({ _id: evento._id }, { $set: cambios });
       }
     }
 
     console.log('Slugs actualizados.');
+    res.status(200).json({ msg: 'Slugs actualizados' });
   } catch (error) {
     console.error('Error al actualizar slugs:', error);
+    res.status(500).json({ msg: 'Error al actualizar slugs', error });
   }
-}
+};
 
 module.exports = {
     crearEvento,
