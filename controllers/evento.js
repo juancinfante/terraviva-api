@@ -20,12 +20,53 @@ const eventoModel = require('../models/eventoModel');
 //     }
 // }
 
+// const crearEvento = async (req, res) => {
+//   try {
+//     const { titulo, provincia, ...resto } = req.body;
+
+//     const slugTitulo = slugify(titulo, { lower: true, strict: true });
+//     const slugProvincia = slugify(provincia, { lower: true, strict: true });
+
+//     const evento = new eventoModel({
+//       titulo,
+//       provincia,
+//       slugTitulo,
+//       slugProvincia,
+//       ...resto,
+//     });
+
+//     await evento.save();
+
+//     res.status(201).json({
+//       msg: "Creado con éxito.",
+//       evento
+//     });
+
+//   } catch (error) {
+//     console.error(error);
+//     res.status(400).json({
+//       msg: "Contacte con el administrador",
+//     });
+//   }
+// };
+
 const crearEvento = async (req, res) => {
   try {
     const { titulo, provincia, ...resto } = req.body;
 
     const slugTitulo = slugify(titulo, { lower: true, strict: true });
     const slugProvincia = slugify(provincia, { lower: true, strict: true });
+
+    // Verificar si ya existe un evento con el mismo slug
+    const existeEvento = await eventoModel.findOne({
+      slugTitulo,
+    });
+
+    if (existeEvento) {
+      return res.status(400).json({
+        msg: "Ya existe un evento con este título.",
+      });
+    }
 
     const evento = new eventoModel({
       titulo,
@@ -39,7 +80,7 @@ const crearEvento = async (req, res) => {
 
     res.status(201).json({
       msg: "Creado con éxito.",
-      evento
+      evento,
     });
 
   } catch (error) {
@@ -49,6 +90,7 @@ const crearEvento = async (req, res) => {
     });
   }
 };
+
 
 // const paginationEventos = async (req, res) => {
 //     const prov = req.params.prov;
